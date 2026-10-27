@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101c26">
+  <meta name="description" content="真正的三维围棋。旋转棋盘，在空间里围气提子；Python 规则引擎与本地 Three.js 可视化。">
+  <title>三维围棋 · GO / 3D</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="masthead"><div class="brand"><svg class="brand-mark" viewBox="0 0 44 44" aria-hidden="true"><path d="M22 3 39 12.8v19L22 41 5 31.8v-19Z M5 12.8 22 23 39 12.8 M22 23v18"/></svg><div><span class="eyebrow">GO BEYOND THE PLANE</span><h1>三维围棋 <span class="dimension-badge">3D</span></h1></div></div><div class="header-note"><i class="live-dot"></i>本地棋局<span class="header-divider">/</span><span id="total-points">125 个格点</span><span class="three-tag">THREE.JS</span></div></header>
+    <main class="workspace">
+      <section class="board-workspace" aria-label="三维棋盘与切层工具">
+        <div class="board-intro"><div><span class="eyebrow">A NEW PERSPECTIVE</span><h2>落一子，围住一个空间。</h2><p>转动棋盘，寻找每层之间的连接。规则仍从气开始。</p></div><div class="board-size-mark" id="board-size-mark">5<span>³</span></div></div>
+        <div class="scene-panel" id="scene-panel">
+          <div class="scene-host" id="scene-host" aria-label="可旋转的三维围棋棋盘"></div>
+          <div class="scene-heading"><span class="scene-label"><i class="live-dot"></i>空间棋盘</span><span id="scene-stats" class="scene-stats">载入 3D…</span></div>
+          <div class="scene-toolbar" aria-label="三维视图控制">
+            <div class="layer-control"><label for="layer-select">显示层</label><select id="layer-select"><option value="all">全部层</option></select></div>
+            <div class="spacing-control"><label for="spacing-range">层间距</label><input type="range" id="spacing-range" min="0.7" max="2" step="0.05" value="1.15" aria-label="三维棋盘层间距"><output id="spacing-value" for="spacing-range">1.15×</output></div>
+            <button id="reset-view-button" title="复位相机">↺ <span>复位</span></button>
+            <label class="rotate-control"><input type="checkbox" id="auto-rotate"><span class="switch" aria-hidden="true"></span>旋转</label>
+          </div>
+          <div id="scene-fallback" class="scene-fallback" hidden><span class="fallback-cube" aria-hidden="true">◇</span><strong>空间视图暂不可用</strong><p id="scene-error">可以通过下方的切层棋盘继续落子。</p></div>
+          <div class="scene-bottom"><span>拖动旋转 <i>·</i> 滚轮缩放 <i>·</i> 右键平移</span><span class="scene-axis"><b>x</b> 横向 <b>y</b> 深度 <b>z</b> 层</span></div>
+        </div>
+        <div class="precise-panel"><section class="inspection" aria-label="格点与气"><span class="eyebrow">READ THE CONNECTION</span><h3 id="inspect-title">在空间中探索一个点</h3><p id="inspect-description">悬停棋子或聚焦切层交叉点，查看三维邻点、整块棋子与全部气。</p><div class="board-legend"><span><i class="legend-ring neighbor"></i>邻点</span><span><i class="legend-ring group"></i>棋块</span><span><i class="legend-square"></i>气</span><span><i class="legend-hint"></i>提示</span></div><p class="inspection-note">每个内点最多 6 邻点；穿过 z 层的空点也算气。</p><label class="territory-control"><input type="checkbox" id="territory-toggle"><span class="switch" aria-hidden="true"></span>在切层显示地盘</label></section><section class="slice-panel" aria-label="二维切层精确落子"><div class="slice-heading"><div><strong>精确落子</strong><span>XY 切层</span></div><label class="sr-only" for="slice-layer-select">精确落子的 z 层</label><select id="slice-layer-select"></select></div><div id="slice-board" class="slice-board-host"></div><p class="slice-help">Tab 聚焦 · 方向键移动 · Enter / 空格落子</p></section></div>
+      </section>
+      <aside class="game-sidebar" aria-label="棋局信息和操作">
+        <section class="game-card turn-card"><span class="eyebrow">YOUR NEXT MOVE</span><div class="turn-display"><span class="turn-stone black" id="turn-stone" aria-hidden="true"></span><div><h2 id="turn-title">读取棋局…</h2><p id="turn-subtitle">连接本地 Python 服务</p></div><span class="move-number" id="move-number">00</span></div><div class="status-banner" id="status-banner" role="status" aria-live="polite">正在连接棋盘…</div><div class="player-row"><span><i class="small-stone black"></i>黑棋</span><span id="black-player">玩家一</span><strong id="black-captures">提 0</strong></div><div class="player-row"><span><i class="small-stone white"></i>白棋</span><span id="white-player">玩家二</span><strong id="white-captures">提 0</strong></div><div class="action-grid"><button class="button primary" id="pass-button">停一手 <span>PASS</span></button><button class="button" id="undo-button">悔棋 <span>UNDO</span></button><button class="button" id="hint-button">找一手 <span>HINT</span></button><button class="button subtle" id="resign-button">认输 <span>RESIGN</span></button></div><button class="button primary resume-button" id="resume-button" hidden>继续对弈</button></section>
+        <section class="game-card score-card"><div class="section-heading"><h3 id="score-title">预估面积</h3><span id="komi-label">白贴 0.5</span></div><div class="score-display"><div><span class="score-label">黑 BLACK</span><strong id="black-score">0</strong></div><span class="score-separator">:</span><div><span class="score-label">白 WHITE</span><strong id="white-score">0.5</strong></div></div><div class="score-breakdown" id="score-breakdown">活子 + 三维空域 + 贴目</div><p class="score-note" id="score-note">中盘空域变化很大，估算不代表胜负；终局需共同确认死活。</p></section>
+        <section class="game-card settings-card"><div class="section-heading"><h3>开一局新棋</h3><span>SETUP</span></div><div class="setup-fields"><label>每轴格点<select id="size-select"><option value="3">3 · 共 27 点</option><option value="5" selected>5 · 共 125 点</option><option value="7">7 · 共 343 点</option></select></label><label>对弈模式<select id="mode-select"><option value="local">双人对弈</option><option value="ai">对电脑 · 你执黑</option></select></label><label class="komi-field">白棋贴目<input id="komi-input" type="number" step="0.5" value="0.5" min="-50" max="50"></label><button class="button new-button" id="new-button">开始新局 <span>↗</span></button></div><div class="file-actions"><button id="save-button">↓ 保存棋局</button><button id="load-button">↑ 读取棋局</button><input type="file" id="load-file" accept=".json,application/json" hidden></div></section>
+        <section class="game-card history-card"><div class="section-heading"><h3>落子记录</h3><span id="history-count">0 手</span></div><ol id="history-list" class="history-list"><li class="history-empty">棋局尚未开始</li></ol></section>
+      </aside>
+    </main>
+    <section class="learning-section" aria-label="围棋规则"><div class="learning-heading"><div><span class="eyebrow">THE THIRD DIMENSION MATTERS</span><h2>上下两层，也是包围的一部分。</h2></div><button class="button demo-button" id="demo-button">试一次跨层提子 <span>↗</span></button></div><div class="rule-grid"><article><span class="rule-number">01 / 相邻</span><h3>三条轴，六个方向</h3><p>只沿 x、y、z 中的一条轴走一步。对角线不相邻，边界不环绕。平面内四面围住，还可能有上、下两气。</p></article><article><span class="rule-number">02 / 包围</span><h3>跨层连通，整块提子</h3><p>相邻同色子组成棋块，共享全部不同空点构成的气。落子先提敌方无气棋块，再检测自己；禁自杀，禁重现曾有的棋盘。</p></article><article><span class="rule-number">03 / 终局</span><h3>共同确认，按面积计分</h3><p>连续两次停着后，双方协商死活，点棋块标记死子。活子 + 仅接触本方的空域为面积；提子不另加分。电脑不裁定死活。</p></article></div></section>
+    <footer class="footer"><span>GO / 3D <i>·</i> PYTHON + THREE.JS</span><span>启发式电脑执白 · 无需账号 · 棋局留在本机</span></footer>
+  </div>
+  <dialog id="confirm-dialog" class="confirm-dialog"><form method="dialog"><span class="eyebrow">CONFIRM</span><h2 id="dialog-title">开始新局？</h2><p id="dialog-description">当前棋局将被替换。可先保存棋局，以便稍后继续。</p><div class="dialog-actions"><button class="button" value="cancel">取消</button><button class="button primary" id="dialog-confirm" value="confirm">确认</button></div></form></dialog>
+</body>
+</html>
