@@ -255,12 +255,17 @@ async function saveGame() {
 async function loadGame(event) {
   const file=event.target.files[0];event.target.value='';
   if(!file||busy||!state)return;
-  if(file.size>2000000){setNotice('存档超过 2,000,000 字节，无法读取。',true);return;}
-  let data;
-  try{data=JSON.parse(await file.text());}catch{setNotice('文件不是有效的 JSON 存档，当前棋局已保留。',true);return;}
-  if((state.game.move_number>0||state.game.finished)&&!(await confirmDialog('读取保存的棋局？',`将用 ${file.name} 替换当前棋局。未保存的落子将丢失。`,'读取棋局')))return;
   setBusy(true);notice='';noticeError=false;renderStatus();
-  try{const next=await readResponse(await fetch('/api/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({revision:state.revision,data})}));inspection=null;hintedPoint=null;applyState(next,{animate:false});setNotice('棋局已恢复，可以继续对弈。');}catch(error){setNotice(error.message,true);}finally{setBusy(false);renderStatus();}
+  try {
+    if(file.size>2000000) throw new Error('存档超过 2,000,000 字节，无法读取。');
+    let data;
+    try { data=JSON.parse(await file.text()); }
+    catch { throw new Error('文件不是有效的 JSON 存档，当前棋局已保留。'); }
+    if((state.game.move_number>0||state.game.finished)&&!(await confirmDialog('读取保存的棋局？',`将用 ${file.name} 替换当前棋局。未保存的落子将丢失。`,'读取棋局')))return;
+    const next=await readResponse(await fetch('/api/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({revision:state.revision,data})}));
+    inspection=null;hintedPoint=null;applyState(next,{animate:false});setNotice('棋局已恢复，可以继续对弈。');
+  } catch(error) { setNotice(error.message,true); }
+  finally { setBusy(false); renderStatus(); }
 }
 function showSceneFallback(message) {
   window.go3d.sceneError=message;
@@ -296,7 +301,7 @@ $('pass-button').addEventListener('click',()=>action('pass'));$('undo-button').a
 $('new-button').addEventListener('click',()=>replaceGame('new'));$('demo-button').addEventListener('click',()=>replaceGame('demo'));
 $('resign-button').addEventListener('click',async()=>{if(state&&!busy&&await confirmDialog(`${colorName(state.game.turn)}认输？`,'认输会立即结束当前棋局，对方获胜。','确认认输'))action('resign');});
 $('save-button').addEventListener('click',saveGame);$('load-button').addEventListener('click',()=>$('load-file').click());$('load-file').addEventListener('change',loadGame);
-window.addEventListener('pagehide',()=>scene?.dispose(),{once:true});
+window.addEventListener('pagehide',event=>{if(!event.persisted)scene?.dispose();});
 
 async function initialize() {
   setBusy(true);

@@ -2,7 +2,11 @@
 
 一个在三维格点上扩展围棋规则的本地小游戏。Three.js 立体棋盘可以旋转、缩放，也提供二维切层以便查看空间关系和精确落子。支持本地双人和入门启发式电脑对手。
 
-## 开始游戏
+## 在线游玩
+
+访问 [三维围棋网页版](https://nattocb.github.io/go3d/)。首次打开时会从 jsDelivr 下载固定版本的 Pyodide 浏览器 Python 运行时，需要联网并等待加载；棋局在浏览器内运行，不上传棋谱。刷新页面会清空棋局，继续之前可使用“保存棋局”下载 JSON，之后通过“读取棋局”恢复。各浏览器标签页的棋局相互独立。
+
+## 本地运行
 
 需要 Python 3.10 或更新版本和支持 WebGL 的现代浏览器。在本目录运行：
 
@@ -10,7 +14,7 @@
 python3 app.py
 ```
 
-macOS 也可以双击 `开始游戏.command`。程序自动选择空闲端口并打开浏览器；在终端按 Ctrl+C 停止。Three.js 已随项目附带，无需安装第三方依赖或连接 CDN。若 WebGL 不可用，可使用二维切层视图。
+macOS 也可以双击 `开始游戏.command`。程序自动选择空闲端口并打开浏览器；在终端按 Ctrl+C 停止。本地运行时 Three.js 已随项目附带，无需安装第三方依赖或连接 CDN。若 WebGL 不可用，可使用二维切层视图。
 
 ## 棋盘和规则
 
@@ -25,7 +29,7 @@ macOS 也可以双击 `开始游戏.command`。程序自动选择空闲端口并
 
 ```sh
 python3 -m unittest discover -s tests -v
-node --test tests/test_viewmodel.mjs
+node --test tests/test_viewmodel.mjs tests/test_web_bridge.cjs tests/test_web_worker.cjs
 python3 build.py
 ```
 
